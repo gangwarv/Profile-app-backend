@@ -23,31 +23,32 @@ public class ProfileController : ControllerBase
     public async Task<IActionResult> GetMyProfile()
     {
         // 1. Extract the unique Object ID (oid or sub) and email from the B2C token claims
-        string azureOid = User.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier")
-                          ?? User.FindFirstValue("oid")
-                          ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var azureOid = User.FindFirstValue("oid");
 
-        string email = User.FindFirstValue("emails")
-                       ?? User.FindFirstValue(ClaimTypes.Email)
-                       ?? "Unknown";
+        var email =
+            User.FindFirstValue("preferred_username")
+            ?? User.FindFirstValue(ClaimTypes.Email)
+            ?? "Unknown";
 
-        string name = User.FindFirstValue("name") ?? "User";
+        var name =
+            User.FindFirstValue("name")
+            ?? "User";
 
-        if (string.IsNullOrEmpty(azureOid))
+        if (string.IsNullOrWhiteSpace(azureOid))
         {
             return BadRequest(new { message = "Invalid token claims: OID missing." });
         }
 
         // 2. Check if user already exists in our local SQL database
         var userProfile = await _context.UserProfiles
-            .FirstOrDefaultAsync(u => u.AzureB2COid == azureOid);
+            .FirstOrDefaultAsync(u => u.AzureOid == azureOid);
 
         // 3. Just-In-Time (JIT) Provisioning if they are logging in for the first time
         if (userProfile == null)
         {
             userProfile = new UserProfile
             {
-                AzureB2COid = azureOid,
+                AzureOid = azureOid,
                 Email = email,
                 FullName = name,
                 Role = "Member",
