@@ -27,8 +27,8 @@ public class ProfileController : ControllerBase
 
         var email =
             User.FindFirstValue("preferred_username")
-            ?? User.FindFirstValue(ClaimTypes.Email)
-            ?? "Unknown";
+                       ?? User.FindFirstValue(ClaimTypes.Email)
+                       ?? "Unknown";
 
         var name =
             User.FindFirstValue("name")
